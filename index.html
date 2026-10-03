@@ -6,7 +6,7 @@
 <script>
 /* v7: регистрация и вход. Заполни SB_URL и SB_KEY (Supabase) — тогда будут облачные аккаунты, Google и VK.
    Пока пусто — работают локальные аккаунты на этом устройстве. */
-window.AUTH_CFG={SB_URL:'',SB_KEY:'',GOOGLE:true,VK_PROVIDER:''/* например 'custom:vk' после настройки в Supabase */};
+window.AUTH_CFG={SB_URL:'https://kubnidchoafmqiywwacb.supabase.co',SB_KEY:'sb_publishable_JRhkB18haGiQMSZIKdM7-w_KlKDT6PM',GOOGLE:true,VK_PROVIDER:''/* например 'custom:vk' после настройки в Supabase */};
 (()=>{
 const C=AUTH_CFG,cloud=!!(C.SB_URL&&C.SB_KEY),L=localStorage;
 let U=null;try{U=JSON.parse(L.getItem('mp_auth'))}catch{}
@@ -39,43 +39,65 @@ html.m #side>.acc{flex:none;margin:0 0 0 6px;max-width:92px;font-size:11px}
 html[data-lay=top]:not(.m) #side>.acc{margin:0 0 0 6px;flex:none}`;
 document.head.insertAdjacentHTML('beforeend','<style>'+css+'</style>');
 const gate=()=>{
-  let mode='in';
+  let mode='in',pe='',cd=0,tm=0;
   const d=document.createElement('div');d.id='ag';document.body.appendChild(d);
-  const draw=(msg)=>{d.innerHTML=`<div class="bx"><h1>Music Player</h1><p>${mode=='in'?'Войди в аккаунт, чтобы открыть свою музыку':'Создай аккаунт — это быстро'}</p>
-<div class="tabs"><button data-m="in" class="${mode=='in'?'on':''}">Вход</button><button data-m="up" class="${mode=='up'?'on':''}">Регистрация</button></div>
-${mode=='up'?'<input id="an" placeholder="Имя" autocomplete="nickname">':''}
-<input id="ae" type="email" placeholder="Почта" autocomplete="email" inputmode="email"><input id="ap" type="password" placeholder="Пароль (от 6 символов)" autocomplete="${mode=='in'?'current-password':'new-password'}">
-<div class="er" id="aer">${msg||''}</div><button class="go" id="ago">${mode=='in'?'Войти':'Зарегистрироваться'}</button>
-${cloud&&(C.GOOGLE||C.VK_PROVIDER)?`<div class="or">или</div><div class="soc">${C.GOOGLE?'<button data-o="google">Google</button>':''}${C.VK_PROVIDER?'<button data-o="'+C.VK_PROVIDER+'">VK</button>':''}</div>`:''}
-<button class="sk" id="ask">Продолжить как гость</button></div>`};
+  const P={in:'Войди в аккаунт, чтобы открыть свою музыку',up:'Создай аккаунт: мы отправим код на почту',code:'Введи код из письма',forgot:'Отправим код для смены пароля',reset:'Введи код из письма и новый пароль'};
+  const inp=(id,ph,ty,ac,extra='')=>`<input id="${id}" type="${ty}" placeholder="${ph}" autocomplete="${ac}" ${extra}>`;
+  const draw=msg=>{
+    let f='';
+    if(!cloud)f='<div class="er" style="min-height:0">Вход ещё не подключён к базе данных (нужны SB_URL и SB_KEY в начале файла). Пока можно зайти как гость.</div>';
+    else if(mode=='in')f=inp('ae','Почта','email','email','inputmode="email"')+inp('ap','Пароль','password','current-password')+'<div class="er" id="aer"></div><button class="go" id="ago">Войти</button><button class="sk" data-m="forgot">Забыли пароль?</button>';
+    else if(mode=='up')f=inp('an','Имя','text','nickname')+inp('ae','Почта','email','email','inputmode="email"')+inp('ap','Пароль (от 6 символов)','password','new-password')+'<div class="er" id="aer"></div><button class="go" id="ago">Получить код</button>';
+    else if(mode=='forgot')f=inp('ae','Почта','email','email','inputmode="email"')+'<div class="er" id="aer"></div><button class="go" id="ago">Отправить код</button><button class="sk" data-m="in">Назад</button>';
+    else f=`<p style="text-align:center">Код отправлен на <b>${pe}</b></p>`+inp('ac','Код из письма','text','one-time-code','inputmode="numeric" maxlength="10" style="text-align:center;letter-spacing:.3em;font-size:22px"')+(mode=='reset'?inp('ap','Новый пароль (от 6 символов)','password','new-password'):'')+'<div class="er" id="aer"></div><button class="go" id="ago">'+(mode=='reset'?'Сменить пароль':'Подтвердить')+'</button><button class="sk" id="arsd">Отправить код ещё раз</button><button class="sk" data-m="in">Назад</button>';
+    const tabs=(mode=='in'||mode=='up')?`<div class="tabs"><button data-m="in" class="${mode=='in'?'on':''}">Вход</button><button data-m="up" class="${mode=='up'?'on':''}">Регистрация</button></div>`:'';
+    const soc=cloud&&(mode=='in'||mode=='up')&&(C.GOOGLE||C.VK_PROVIDER)?`<div class="or">или</div><div class="soc">${C.GOOGLE?'<button data-o="google">Google</button>':''}${C.VK_PROVIDER?'<button data-o="'+C.VK_PROVIDER+'">VK</button>':''}</div>`:'';
+    d.innerHTML=`<div class="bx"><h1>Music Player</h1><p>${cloud?P[mode]:'Аккаунты'}</p>${tabs}${f}${soc}<button class="sk" id="ask">Продолжить как гость</button></div>`;
+    if(msg)err(msg)};
   const err=t=>{const e=d.querySelector('#aer');if(e)e.textContent=t};
+  const v=id=>(d.querySelector('#'+id)||{}).value||'';
+  const human=e=>{const m=e.message||'';return /rate limit|too many|seconds/i.test(m)?'Слишком часто. Подожди минуту и попробуй снова':/expired|invalid/i.test(m)&&/token|otp|code/i.test(m)?'Неверный или просроченный код':/Invalid login/i.test(m)?'Неверная почта или пароль':/sending|smtp|email/i.test(m)&&/error|fail/i.test(m)?'Не удалось отправить письмо. Проверь настройки почты в Supabase':m||'Ошибка'};
   draw();
   const submit=async()=>{
-    const em=d.querySelector('#ae').value.trim().toLowerCase(),pw=d.querySelector('#ap').value,nm=(d.querySelector('#an')||{}).value||'';
-    if(!/^\S+@\S+\.\S+$/.test(em))return err('Введи правильную почту');
-    if(pw.length<6)return err('Пароль — минимум 6 символов');
-    err('Секунду…');
+    if(!cloud)return;
+    const em=v('ae').trim().toLowerCase(),pw=v('ap'),nm=v('an').trim(),co=v('ac').replace(/\s/g,'');
     try{
-      if(cloud){const c=await loadSb();
-        if(mode=='up'){const{data,error}=await c.auth.signUp({email:em,password:pw,options:{data:{name:nm}}});if(error)throw error;
-          if(!data.session)return err('Готово! Подтверди почту по письму и войди.');done(fromSb(data.user))}
-        else{const{data,error}=await c.auth.signInWithPassword({email:em,password:pw});if(error)throw error;done(fromSb(data.user))}}
-      else{const A=accts();
-        if(mode=='up'){if(A[em])return err('Такой аккаунт уже есть — войди');const salt=hx(crypto.getRandomValues(new Uint8Array(12)));
-          A[em]={salt,h:await hash(pw,salt),name:nm||em.split('@')[0]};L.setItem('mp_accts',JSON.stringify(A));done({id:'loc_'+hx(enc.encode(em)).slice(0,24),name:A[em].name,email:em})}
-        else{const a=A[em];if(!a||a.h!=await hash(pw,a.salt))return err('Неверная почта или пароль');done({id:'loc_'+hx(enc.encode(em)).slice(0,24),name:a.name,email:em})}}
-    }catch(e){err(/Invalid login/i.test(e.message)?'Неверная почта или пароль':/registered/i.test(e.message)?'Такая почта уже зарегистрирована':e.message||'Ошибка')}};
+      if(mode=='in'||mode=='up'||mode=='forgot'){
+        if(!/^\S+@\S+\.\S+$/.test(em))return err('Введи правильную почту');
+        if(mode!='forgot'&&pw.length<6)return err('Пароль: минимум 6 символов')}
+      err('Секунду…');const c=await loadSb();
+      if(mode=='up'){
+        const{data,error}=await c.auth.signUp({email:em,password:pw,options:{data:{name:nm}}});if(error)throw error;
+        if(data.user&&data.user.identities&&!data.user.identities.length)return err('Такая почта уже зарегистрирована. Войди или восстанови пароль');
+        if(data.session)return done(fromSb(data.user));
+        pe=em;mode='code';draw();cool()}
+      else if(mode=='in'){
+        const{data,error}=await c.auth.signInWithPassword({email:em,password:pw});
+        if(error){if(/not confirmed/i.test(error.message)){await c.auth.resend({type:'signup',email:em});pe=em;mode='code';draw('Почта не подтверждена. Отправили новый код');return cool()}throw error}
+        done(fromSb(data.user))}
+      else if(mode=='code'){
+        if(co.length<6)return err('Введи код из письма');
+        const{data,error}=await c.auth.verifyOtp({email:pe,token:co,type:'signup'});if(error)throw error;done(fromSb(data.user))}
+      else if(mode=='forgot'){
+        const{error}=await c.auth.resetPasswordForEmail(em);if(error)throw error;pe=em;mode='reset';draw();cool()}
+      else if(mode=='reset'){
+        if(co.length<6)return err('Введи код из письма');if(pw.length<6)return err('Пароль: минимум 6 символов');
+        const{data,error}=await c.auth.verifyOtp({email:pe,token:co,type:'recovery'});if(error)throw error;
+        const r=await c.auth.updateUser({password:pw});if(r.error)throw r.error;done(fromSb(r.data.user))}
+    }catch(e){err(human(e))}};
+  const cool=()=>{cd=60;clearInterval(tm);const t=()=>{const b=d.querySelector('#arsd');if(!b)return clearInterval(tm);if(cd>0){b.disabled=true;b.textContent='Отправить код ещё раз ('+cd+' с)';cd--}else{b.disabled=false;b.textContent='Отправить код ещё раз';clearInterval(tm)}};t();tm=setInterval(t,1000)};
   d.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)return;
     if(t.dataset.m){mode=t.dataset.m;draw()}
     else if(t.id=='ago')submit();
+    else if(t.id=='arsd'){try{const c=await loadSb();const r=mode=='reset'?await c.auth.resetPasswordForEmail(pe):await c.auth.resend({type:'signup',email:pe});if(r.error)throw r.error;err('Новый код отправлен');cool()}catch(x){err(human(x))}}
     else if(t.id=='ask'){d.remove();chip()}
-    else if(t.dataset.o){try{const c=await loadSb();const{error}=await c.auth.signInWithOAuth({provider:t.dataset.o,options:{redirectTo:location.origin+location.pathname}});if(error)throw error}catch(x){err(x.message)}}});
+    else if(t.dataset.o){try{const c=await loadSb();const{error}=await c.auth.signInWithOAuth({provider:t.dataset.o,options:{redirectTo:location.origin+location.pathname}});if(error)throw error}catch(x){err(human(x))}}});
   d.addEventListener('keydown',e=>{if(e.key=='Enter')submit()});
 };
 window.openAuth=()=>{if(!document.getElementById('ag'))gate()};
 const chip=()=>{if(document.querySelector('.acc'))return;const b=document.createElement('button');b.className='acc';b.title=U?'Профиль':'Войти';b.textContent=U?U.name:'Войти';b.onclick=()=>{if(!U)return openAuth();view='prof';S.view='prof';persist();openPl=null;render()};document.getElementById('side').appendChild(b)};
 addEventListener('DOMContentLoaded',async()=>{
-  if(U){chip();return}
+  if(U){chip();if(U.cloud&&cloud)loadSb().then(c=>c.auth.getSession()).then(r=>{if(r&&r.data&&!r.data.session){L.removeItem('mp_auth');location.reload()}}).catch(()=>{});return}
   if(cloud){try{const c=await loadSb();const{data}=await c.auth.getSession();if(data.session)return done(fromSb(data.session.user))}catch{}}
   gate()});
 })();
