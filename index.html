@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+><!DOCTYPE html>
 <html lang="ru" data-theme="dark"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Music Player</title>
@@ -38,7 +38,7 @@ const css=`#ag{position:fixed;inset:0;z-index:100;display:grid;place-items:cente
 html.m #side>.acc{flex:none;margin:0 0 0 6px;max-width:92px;font-size:11px}
 html[data-lay=top]:not(.m) #side>.acc{margin:0 0 0 6px;flex:none}`;
 document.head.insertAdjacentHTML('beforeend','<style>'+css+'</style>');
-const gate=()=>{
+const gate=(first)=>{
   let mode='in',pe='',cd=0,tm=0;
   const d=document.createElement('div');d.id='ag';document.body.appendChild(d);
   const P={in:'Войди в аккаунт, чтобы открыть свою музыку',up:'Создай аккаунт: мы отправим код на почту',code:'Введи код из письма',forgot:'Отправим код для смены пароля',reset:'Введи код из письма и новый пароль'};
@@ -57,7 +57,7 @@ const gate=()=>{
   const err=t=>{const e=d.querySelector('#aer');if(e)e.textContent=t};
   const v=id=>(d.querySelector('#'+id)||{}).value||'';
   const human=e=>{const m=e.message||'';return /rate limit|too many|seconds/i.test(m)?'Слишком часто. Подожди минуту и попробуй снова':/expired|invalid/i.test(m)&&/token|otp|code/i.test(m)?'Неверный или просроченный код':/Invalid login/i.test(m)?'Неверная почта или пароль':/sending|smtp|email/i.test(m)&&/error|fail/i.test(m)?'Не удалось отправить письмо. Проверь настройки почты в Supabase':m||'Ошибка'};
-  draw();
+  draw(first);
   const submit=async()=>{
     if(!cloud)return;
     const em=v('ae').trim().toLowerCase(),pw=v('ap'),nm=v('an').trim(),co=v('ac').replace(/\s/g,'');
@@ -99,7 +99,9 @@ const chip=()=>{if(document.querySelector('.acc'))return;const b=document.create
 addEventListener('DOMContentLoaded',async()=>{
   if(U){chip();if(U.cloud&&cloud)loadSb().then(c=>c.auth.getSession()).then(r=>{if(r&&r.data&&!r.data.session){L.removeItem('mp_auth');location.reload()}}).catch(()=>{});return}
   if(cloud){try{const c=await loadSb();const{data}=await c.auth.getSession();if(data.session)return done(fromSb(data.session.user))}catch{}}
-  gate()});
+  const qq=new URLSearchParams((location.hash||'').replace(/^#/,'')+'&'+location.search.replace(/^\?/,'')),eo=qq.get('error_description')||qq.get('error');
+  if(eo){try{history.replaceState(null,'',location.pathname)}catch{}}
+  gate(eo?'Google: '+decodeURIComponent(eo).replace(/\+/g,' '):'')});
 })();
 </script>
 
@@ -1403,4 +1405,4 @@ g('fc2').onchange=async e=>{const f=e.target.files[0];if(!f)return;S.prof=Object
 const qv=new URLSearchParams(location.search).get('v');if(qv&&nav.some(n=>n[0]==qv)){view=qv;S.view=qv;persist();render()}
 })();
 </script>
-</body></html>
+</body></html
