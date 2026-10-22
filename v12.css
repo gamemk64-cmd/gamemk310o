@@ -1,0 +1,116 @@
+/* v12 — Люди, Настройки, голосовой HUD, анимации */
+
+/* ---------- иконки меню ---------- */
+#nav button[data-v=people]::before{content:"☻";font-size:17px}
+#nav button[data-v=set]::before{content:"⚙";font-size:17px}
+
+/* ---------- «нажатие» кнопки паузы голосом ---------- */
+#pp.vc-press{animation:v12press .7s cubic-bezier(.2,.9,.25,1)}
+@keyframes v12press{0%{transform:scale(1)}25%{transform:scale(.82);box-shadow:0 0 0 0 var(--ac)}60%{transform:scale(1.12);box-shadow:0 0 0 14px transparent}100%{transform:scale(1)}}
+
+/* ---------- настройки ---------- */
+#v12set .v12-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px;padding:5px;border-radius:18px;background:color-mix(in srgb,var(--pn) 70%,transparent);border:1px solid var(--ln);width:fit-content;max-width:100%}
+#v12set .v12-tabs button{padding:9px 16px;border-radius:13px;font-weight:700;color:var(--mu);transition:background .25s,color .25s,transform .2s}
+#v12set .v12-tabs button:hover{transform:translateY(-1px)}
+#v12set .v12-tabs button.on{background:var(--ac);color:var(--bg)}
+#v12set .v12-body{animation:v12in .35s cubic-bezier(.2,.9,.25,1)}
+#v12set .v12-sec h3:first-child{margin-top:0}
+.v12-list{display:flex;flex-direction:column;gap:8px;max-width:760px}
+.v12-item{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 15px;border-radius:16px;background:color-mix(in srgb,var(--pn) 68%,transparent);border:1px solid var(--ln);backdrop-filter:blur(14px)}
+.v12-item>div:first-child{min-width:0;flex:1}
+.v12-item b{display:block}
+.v12-item small{display:block;color:var(--mu);margin-top:2px;line-height:1.35}
+.v12-item input[type=text],.v12-item select{max-width:46vw;min-width:0}
+.v12-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.v12-install{border-color:color-mix(in srgb,var(--ac) 45%,var(--ln));background:color-mix(in srgb,var(--ac) 10%,transparent)}
+.v12-sw{width:50px;height:30px;border-radius:30px;padding:0;position:relative;flex:none;background:var(--pn2);border:1px solid var(--ln);transition:background .25s}
+.v12-sw i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--mu);transition:transform .28s cubic-bezier(.2,.9,.25,1),background .25s}
+.v12-sw.on{background:var(--ac)}
+.v12-sw.on i{transform:translateX(20px);background:var(--bg)}
+@keyframes v12in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- люди ---------- */
+.v12-ava{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font:800 22px var(--disp,inherit);background:linear-gradient(140deg,var(--ac),color-mix(in srgb,var(--ac) 35%,#000));color:var(--bg);flex:none;box-shadow:0 10px 26px -12px var(--ac)}
+.v12-ucard{text-align:center;animation:v12in .4s both;animation-delay:calc(var(--i,0)*45ms);transition:transform .25s,border-color .25s}
+.v12-ucard:hover{transform:translateY(-4px)}
+.v12-ucard .v12-ava{margin:4px auto 10px;width:64px;height:64px;font-size:26px}
+.v12-me{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:18px;margin:0 0 16px;background:color-mix(in srgb,var(--pn) 68%,transparent);border:1px solid var(--ln)}
+.v12-me>div{flex:1;min-width:0}
+.v12-user{display:flex;align-items:center;gap:16px;margin:6px 0 10px}
+.v12-user .v12-ava{width:68px;height:68px;font-size:28px}
+.v12-prow{animation:v12in .4s both;animation-delay:calc(var(--i,0)*35ms)}
+.v12-lk{font-size:20px;transition:transform .2s,color .2s}
+.v12-lk.on{color:#ff4d6d;animation:v12heart .45s cubic-bezier(.2,.9,.25,1)}
+@keyframes v12heart{0%{transform:scale(.6)}55%{transform:scale(1.5)}100%{transform:scale(1)}}
+.v12-hero{text-align:center;padding:46px 20px;border:1px dashed var(--ln);border-radius:24px;max-width:560px;margin:20px auto}
+.v12-hero-i{font-size:54px;color:var(--ac)}
+.v12-hero p{color:var(--mu)}
+
+/* ---------- установка ---------- */
+.v12-modal{position:fixed;inset:0;z-index:100001;display:grid;place-items:center;background:#0009;backdrop-filter:blur(8px);animation:v12fade .25s}
+.v12-mbox{width:min(440px,92vw);padding:22px;border-radius:24px;background:var(--bg);color:var(--tx);border:1px solid var(--ln);box-shadow:0 40px 90px -30px #000;animation:v12in .35s cubic-bezier(.2,.9,.25,1)}
+.v12-mbox h3{margin:0 0 10px;font-size:20px}
+.v12-mbox ol{margin:0 0 8px;padding-left:20px;line-height:1.55;color:var(--mu)}
+@keyframes v12fade{from{opacity:0}to{opacity:1}}
+
+/* ---------- голосовой HUD ---------- */
+#vhud{position:fixed;left:50%;top:42%;z-index:100002;width:min(980px,94vw);transform:translate(-50%,-46%) scale(.96);opacity:0;pointer-events:none;transition:opacity .35s,transform .45s cubic-bezier(.2,.9,.25,1)}
+#vhud.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#vhud .vh-card{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:26px 24px;border-radius:34px;
+  background:color-mix(in srgb,var(--bg) 72%,transparent);border:1px solid color-mix(in srgb,var(--ac) 28%,var(--ln));
+  backdrop-filter:blur(26px) saturate(150%);box-shadow:0 40px 120px -40px #000,0 0 90px -30px var(--ac)}
+#vhud .vh-top{display:flex;align-items:center;gap:12px;min-height:26px;color:var(--mu);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:13px}
+.vh-orb{display:inline-flex;gap:4px;align-items:center;height:26px}
+.vh-orb i{display:block;width:5px;height:8px;border-radius:5px;background:var(--ac);opacity:.6}
+#vhud.awake .vh-orb i{animation:v12eq .9s ease-in-out infinite;opacity:1}
+.vh-orb i:nth-child(2){animation-delay:.12s!important}.vh-orb i:nth-child(3){animation-delay:.24s!important}.vh-orb i:nth-child(4){animation-delay:.36s!important}.vh-orb i:nth-child(5){animation-delay:.48s!important}
+@keyframes v12eq{0%,100%{height:8px}50%{height:26px}}
+.vh-heard{font:800 clamp(30px,6.2vw,68px)/1.12 var(--disp,inherit);letter-spacing:-.02em;color:var(--tx);min-height:1.1em;word-break:break-word}
+.vh-heard:empty{display:none}
+.vh-heard .w{display:inline-block;margin:0 .08em}
+.vh-heard .w.new{animation:v12word .45s cubic-bezier(.2,.9,.25,1) both;animation-delay:var(--d,0ms)}
+.vh-heard:not(.final){opacity:.82}
+.vh-heard.final{text-shadow:0 0 38px color-mix(in srgb,var(--ac) 55%,transparent)}
+@keyframes v12word{from{opacity:0;transform:translateY(.45em) scale(.9);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+.vh-say{font:700 clamp(20px,3.6vw,38px)/1.2 var(--disp,inherit);color:var(--ac);min-height:0}
+.vh-say:empty{display:none}
+.vh-say.bad{color:#ff6b6b}
+.vh-say.pop{animation:v12pop .5s cubic-bezier(.2,.9,.25,1)}
+@keyframes v12pop{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:none}}
+.vh-ask{display:none;gap:12px;flex-wrap:wrap;justify-content:center;align-items:stretch;pointer-events:auto;width:100%}
+.vh-ask.on{display:flex}
+.vh-ask .vh-q{width:100%;font:700 clamp(18px,3vw,28px) var(--disp,inherit);color:var(--mu)}
+.vh-ask button{display:flex;flex-direction:column;gap:4px;align-items:center;min-width:min(250px,42vw);padding:18px 22px;border-radius:22px;border:1px solid var(--ln);background:var(--pn2);color:var(--tx);transition:transform .2s,border-color .2s,background .2s}
+.vh-ask button:hover{transform:translateY(-3px);border-color:var(--ac);background:color-mix(in srgb,var(--ac) 18%,var(--pn2))}
+.vh-ask button b{font-size:clamp(18px,2.6vw,26px)}
+.vh-ask button small{color:var(--mu)}
+.vh-ask button.x{min-width:0;align-self:center;background:transparent;border-color:transparent;color:var(--mu)}
+#vcTalk.on{color:var(--ac)}
+#vcTalk svg{display:block}
+
+/* ---------- анимации смены песни ---------- */
+body[data-sw] #pc{animation:v12cv .65s cubic-bezier(.2,.9,.25,1)}
+body[data-sw=next] #now .tt{animation:v12txtR .5s cubic-bezier(.2,.9,.25,1)}
+body[data-sw=prev] #now .tt{animation:v12txtL .5s cubic-bezier(.2,.9,.25,1)}
+body[data-sw] #amb{animation:v12amb 1s ease-out}
+@keyframes v12cv{0%{transform:scale(.55) rotate(-14deg);opacity:0;filter:blur(6px)}55%{transform:scale(1.1) rotate(3deg);opacity:1;filter:none}100%{transform:none}}
+@keyframes v12txtR{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes v12txtL{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+@keyframes v12amb{0%{filter:brightness(1)}30%{filter:brightness(1.9) saturate(1.4)}100%{filter:none}}
+.big{animation:v12big .8s cubic-bezier(.2,.9,.25,1)}
+.hi h2,.hi .chip{animation:v12txtR .6s cubic-bezier(.2,.9,.25,1) both}
+.hi .chip{animation-delay:.08s}
+@keyframes v12big{0%{opacity:0;transform:scale(.72) rotate(-6deg);filter:blur(10px)}60%{transform:scale(1.04) rotate(1deg);filter:none}100%{opacity:1}}
+.row.on{animation:v12row .5s cubic-bezier(.2,.9,.25,1)}
+@keyframes v12row{from{transform:translateX(-10px);opacity:.6}to{transform:none;opacity:1}}
+.v12-ring{position:fixed;z-index:50;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;pointer-events:none;border:2px solid var(--ac);animation:v12ring 1s ease-out forwards}
+@keyframes v12ring{from{transform:scale(1);opacity:.9}to{transform:scale(14);opacity:0}}
+body.v12-noanim #pc,body.v12-noanim #now .tt,body.v12-noanim #amb,body.v12-noanim .big,body.v12-noanim .hi h2,body.v12-noanim .hi .chip,body.v12-noanim .row.on{animation:none!important}
+body.v12-noanim .v12-ring{display:none}
+@media(prefers-reduced-motion:reduce){body[data-sw] #pc,body[data-sw] #now .tt,body[data-sw] #amb,.big,.hi h2,.hi .chip,.row.on,.v12-ring{animation:none!important}}
+
+/* ---------- телефон ---------- */
+html.m #vhud,html.android #vhud{top:36%}
+html.m .v12-item,html.android .v12-item{flex-wrap:wrap}
+html.m .v12-item input[type=text],html.m .v12-item select,html.android .v12-item input[type=text],html.android .v12-item select{max-width:100%;width:100%}
+@media(max-width:700px){.v12-item{flex-wrap:wrap}.v12-item input[type=text],.v12-item select{max-width:100%;width:100%}#vhud .vh-card{padding:20px 14px;border-radius:26px}}
