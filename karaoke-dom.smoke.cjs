@@ -1,0 +1,15 @@
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+const html = fs.readFileSync(require('node:path').join(__dirname, '../index.html'), 'utf8');
+assert.match(html, /function findLyricIndexAtTime\(lines,time\)/, 'binary search computes active line from source time');
+assert.match(html, /requestAnimationFrame\(draw\)/, 'karaoke visualization loop uses requestAnimationFrame');
+assert.doesNotMatch(html, /setInterval\(syncLyrics,\s*45\)/, 'old interval-driven sync is absent');
+assert.match(html, /getCurrentTime\(\)/, 'YouTube source clock is read');
+assert.match(html, /au\?\.currentTime/, 'HTML media source clock is read');
+assert.match(html, /min="-2000" max="2000"/, 'calibration range remains -2000..+2000ms');
+assert.match(html, /function splitIntoSyllables\(/, 'syllable segmentation exists');
+assert.match(html, /function renderSyllabicWord\(/, 'words are rendered into syllable and character spans');
+assert.match(html, /querySelectorAll\('\.kc'\)/, 'sync updates individual character states');
+assert.match(html, /kr-pause-mark/, 'inferred lyric pause marker remains');
+assert.match(html, /karaokeRequestSeq/, 'request generation protection remains');
+console.log('PASS: 11 static regression assertions');
