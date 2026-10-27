@@ -762,6 +762,7 @@ addEventListener('DOMContentLoaded',async()=>{
   gate(eo?'Google: '+decodeURIComponent(eo).replace(/\+/g,' '):'')});
 })();
 </script>
+<script src="cloud-sync.js"></script>
 <script>
 /* v6: адаптив — авто-масштаб под экран (ПК/ТВ) и единое правило «это телефон» */
 window.MQP='(max-width:820px),(max-height:520px) and (pointer:coarse)';
@@ -1135,6 +1136,51 @@ input,textarea{user-select:text;-webkit-user-select:text}
 #spotifyDiscover .sp-for-you-note button{color:#fff;text-decoration:underline;background:none;padding:0 0 0 5px}
 </style>
 
+
+<style id="topbar-auth-search-fix">
+/* Search header: centered, consistent position, no full-width black strip */
+#topbar{
+  position:fixed!important;
+  top:12px!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+  width:min(700px,calc(100vw - 24px))!important;
+  min-width:0!important;
+  height:56px!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:12px!important;
+  padding:0 12px!important;
+  margin:0!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  z-index:90!important;
+}
+#topbar .spotify-round{
+  flex:0 0 42px!important;
+  width:42px!important;
+  height:42px!important;
+}
+#topbar .spotify-search{
+  flex:0 1 470px!important;
+  width:min(470px,calc(100vw - 112px))!important;
+  max-width:470px!important;
+  min-width:0!important;
+  height:48px!important;
+  box-sizing:border-box!important;
+}
+#topbar .top-spacer,#topbar .install,#topbar #spSettings{display:none!important}
+/* Do not show the player search/header behind or above login/register */
+body:has(#ag) #topbar{display:none!important}
+@media(max-width:520px){
+  #topbar{top:8px!important;width:calc(100vw - 16px)!important;padding:0 4px!important;gap:8px!important}
+  #topbar .spotify-search{flex:1 1 auto!important;width:auto!important;max-width:none!important}
+}
+</style>
 </head><body>
 <div id="bgart"></div>
 <header id="topbar"><button class="spotify-round" id="spHome" title="Главная">⌂</button><label class="spotify-search"><span>⌕</span><input id="spTopSearch" type="search" placeholder="Что хочешь включить?" autocomplete="off" aria-label="Поиск музыки"><span style="font-size:18px">▣</span></label><div class="top-spacer"></div><button class="install" id="spInstall">⇩ Установить приложение</button><button class="top-icon settings-gear" id="spSettings" title="Настройки" aria-label="Настройки">⚙</button></header>
@@ -1330,7 +1376,7 @@ async function wfetch(rand){
   WBUSY=false;if(view=='web')render()}
 
 const JP=u=>new Promise((res,rej)=>{const n='jp'+Math.random().toString(36).slice(2),sc=document.createElement('script'),cl=()=>{delete window[n];sc.remove()};window[n]=d=>{cl();res(d)};sc.onerror=()=>{cl();rej(new Error('jsonp'))};setTimeout(()=>rej(new Error('timeout')),8000);sc.src=u+(u.includes('?')?'&':'?')+'callback='+n;document.head.append(sc)});
-const J=async u=>{try{const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}catch(e){if(/^https:\/\/itunes\.apple\.com\/(search|lookup)/.test(u))return JP(u);throw e}};
+const J=async u=>{try{const ctl=typeof AbortController!=='undefined'?new AbortController():null;const timer=ctl?setTimeout(()=>ctl.abort(),7000):null;try{const r=await fetch(u,ctl?{signal:ctl.signal}:{});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{if(timer)clearTimeout(timer)}}catch(e){if(/^https:\/\/itunes\.apple\.com\/(search|lookup)/.test(u))return JP(u);throw e}};
 async function byArtists(){const A=(S.ra||RA).split(',').map(x=>x.trim()).filter(Boolean);
   return (await Promise.all(shuffle(A).slice(0,8).map(a=>J(`https://itunes.apple.com/search?term=${encodeURIComponent(a)}&country=ru&media=music&entity=song&limit=8`).then(j=>j.results||[]).catch(()=>[])))).flat().filter(x=>x.previewUrl).map(mapI)}
 async function wsearch(){
@@ -1369,18 +1415,36 @@ function countryForCharts(){
   return ({UK:'GB',EN:'US'}[cc]||cc);
 }
 async function wartist(a){
-  WBUSY=true;WMSG='';render();
-  try{let list;
-    if(a.k=='it'){
-      const [yt,au]=await Promise.all([
-        ytSearch(a.n).catch(()=>[]),
-        J(`${AU}/tracks/search?query=${encodeURIComponent(a.n)}&${AP}`).then(r=>(r.data||[]).map(mapA).filter(t=>t.dur>30)).catch(()=>[])
-      ]);
-      const seen=new Set();list=[...yt,...au].filter(t=>t&&t.dur>30&&!t.previewOnly).filter(t=>{const k=t.yt||t.id;if(seen.has(k))return false;seen.add(k);return true});
-    } else list=((await J(`${AU}/users/${a.id}/tracks?limit=60&${AP}`)).data||[]).map(mapA).filter(t=>t.dur>30);
-    WR=list;WT=a.n;WMSG=list.length?'':'У этого исполнителя нет доступных песен'}
-  catch(e){console.error(e);WMSG='Не удалось загрузить песни исполнителя'}
-  WBUSY=false;if(view=='web')render()}
+  WBUSY=true;WMSG='';WA=[];render();
+  try{let list=[];
+    // Audius artist IDs give the most accurate catalogue; other song/artist cards use cross-source search.
+    if(a&&a.k==='au'&&a.id){
+      list=((await J(`${AU}/users/${encodeURIComponent(a.id)}/tracks?limit=100&${AP}`)).data||[]).map(mapA).filter(t=>t.dur>30);
+    }else{
+      const name=String(a&& (a.n||a.artist||a.title)||'').trim();
+      if(!name)throw new Error('Неизвестный исполнитель');
+      const queries=[`"${name}"`,name].filter((v,i,x)=>x.indexOf(v)===i);
+      const batches=await Promise.all(queries.map(async q=>{
+        const [yt,au]=await Promise.all([
+          ytSearch(q).catch(()=>[]),
+          J(`${AU}/tracks/search?query=${encodeURIComponent(q)}&${AP}`).then(r=>(r.data||[]).map(mapA).filter(t=>t.dur>30)).catch(()=>[])
+        ]);
+        return [...yt,...au];
+      }));
+      const seen=new Set();
+      list=batches.flat().filter(t=>{
+        if(!t||t.previewOnly||!(Number(t.dur)>30))return false;
+        const artist=String(t.artist||'').toLowerCase().replace(/\s*[-–—]?\s*(official|vevo|topic).*$/i,'').trim();
+        const wanted=name.toLowerCase();
+        // Keep exact artist matches and channel naming variants, but avoid unrelated broad-query hits.
+        if(artist&&wanted.length>2&&!artist.includes(wanted)&&!wanted.includes(artist))return false;
+        const key=String(t.yt||t.id||'')+'|'+String(t.title||'').toLowerCase().replace(/\s+/g,' ').trim();
+        if(seen.has(key))return false;seen.add(key);return true;
+      }).slice(0,100);
+    }
+    WR=list;WT=(a&&(a.n||a.artist||a.title))||'Исполнитель';WMSG=list.length?'':'Не удалось найти доступные полные треки. Попробуйте другое написание имени.';
+  }catch(e){console.error(e);WMSG='Не удалось загрузить песни исполнителя. Попробуйте ещё раз.'}
+  WBUSY=false;if(view==='web')render()}
 
 </script>
 <script>
@@ -1398,7 +1462,42 @@ var ytPlay=function ytPlay0(id,pos){
     if(!yp)yp=new YT.Player('ytf',{width:'100%',height:'100%',videoId:id,playerVars:{playsinline:1,controls:0,rel:0,modestbranding:1,iv_load_policy:3,disablekb:1,autoplay:pos===undefined?1:0,start:pos|0,origin:location.origin},events:{
       onReady:()=>ytVol(),
       onStateChange:e=>{if(e.data===1&&!isYT()){try{yp.stopVideo()}catch{}return}if(e.data===1)ytVol();if(e.data===0)next(true);$('#pp').textContent=e.data===1?'⏸':'▶'},
-      onError:e=>{toast('YouTube: не удалось воспроизвести (код '+e.data+(e.data==153?': откройте плеер через http://localhost, а не как файл':'')+')');if(e.data!=153)setTimeout(()=>next(true),1500)}}});
+      onError:e=>{
+        const err=Number(e.data);
+        const failed=T.get(S.cur);
+        // Ошибки 101/150 означают, что владелец видео запретил воспроизведение во встроенном плеере.
+        // Пытаемся найти ту же песню в Audius, чтобы пользователь не упирался в эту ошибку.
+        if((err===101||err===150)&&failed&&!failed._audiusFallback){
+          const token=ytTok;
+          toast('YouTube ограничил этот трек — ищу доступную версию…');
+          (async()=>{
+            try{
+              const query=[failed.title,failed.artist].filter(Boolean).join(' ');
+              const data=await J(`${AU}/tracks/search?query=${encodeURIComponent(query)}&${AP}`);
+              if(token!==ytTok)return;
+              const rows=(data.data||[]).filter(x=>Number(x.duration)>30);
+              const title=s=>String(s||'').toLowerCase().replace(/[^a-zа-яё0-9]+/gi,' ').trim();
+              const target=title(failed.title);
+              const match=rows.find(x=>title(x.title)===target)
+                ||rows.find(x=>target.length>4&&(title(x.title).includes(target)||target.includes(title(x.title))));
+              if(match){
+                const replacement=mapA(match);
+                replacement._audiusFallback=true;
+                T.set(replacement.id,replacement);
+                play(replacement.id,[replacement.id]);
+              }else{
+                toast('Эту версию YouTube нельзя встроенно воспроизвести, а в Audius замена не найдена. Пропускаю трек.');
+                setTimeout(()=>{if(token===ytTok)next(true)},900);
+              }
+            }catch(err2){
+              if(token===ytTok){toast('YouTube запретил встроенное воспроизведение. Пропускаю трек.');setTimeout(()=>next(true),900)}
+            }
+          })();
+          return;
+        }
+        toast('YouTube: не удалось воспроизвести (код '+err+(err===153?': откройте сайт через HTTPS или localhost':'')+')');
+        if(err!==153)setTimeout(()=>next(true),1500)
+      }}});
     else if(pos===undefined)yp.loadVideoById(id);else yp.cueVideoById(id,pos)})}
 setInterval(()=>{if(!isYT()||!yp||!yp.getCurrentTime)return;try{const c=yp.getCurrentTime(),d=yp.getDuration()||0;$('#tc').textContent=fmt(c);$('#td').textContent=fmt(d);if(!seeking)$('#seek').value=d?c/d*1000:0;S.pos=c;ytVol()}catch{}},400);
 const PIPED=['https://pipedapi.adminforge.de','https://api.piped.private.coffee','https://pipedapi.kavin.rocks'];
@@ -1424,7 +1523,7 @@ let WE='';
 const wrow=(w,i)=>`<article class="world-track-card ${S.cur==w.id?'on':''}" data-w="${i}" title="${esc(w.title)}">
   <div class="world-track-art">${w.curl?`<img loading="lazy" src="${esc(w.curl)}" alt="Обложка: ${esc(w.title)}" onerror="this.style.display='none'">`:''}<span class="world-track-play">▶</span><span class="world-track-duration">${fmt(w.dur)}</span></div>
   <div class="world-track-meta"><b>${esc(w.title)}</b><small>${esc(w.artist)}</small></div>
-  <div class="world-track-actions"><button data-k="fav" style="${S.fav.includes(w.id)?'color:var(--ac)':''}" title="Добавить в избранное">♥</button><button data-k="pl" title="В плейлист">＋</button>${w.dl?'<button data-k="dl" title="Скачать">⬇</button>':''}</div>
+  <div class="world-track-actions"><button data-k="fav" style="${S.fav.includes(w.id)?'color:var(--ac)':''}" title="Добавить в избранное">♥</button><button data-k="pl" title="В плейлист">＋</button><button data-k="artist" title="Все песни исполнителя">♙</button>${w.dl?'<button data-k="dl" title="Скачать">⬇</button>':''}</div>
 </article>`;
 /* Поиск: карточки с обложкой и подписью */
 (function(){
@@ -1442,6 +1541,7 @@ const wrow=(w,i)=>`<article class="world-track-card ${S.cur==w.id?'on':''}" data
  #main .world-track-meta small{display:block;margin-top:4px;color:var(--muted,#aaa);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  #main .world-track-actions{display:flex;gap:5px}
  #main .world-track-actions button{min-width:30px;padding:5px 8px;border-radius:8px}
+ #main .world-track-actions button[data-k=artist]{font-size:13px}
  @media(max-width:520px){#main .world-track-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}}`;
  if(!document.getElementById('world-search-card-css')){const st=document.createElement('style');st.id='world-search-card-css';st.textContent=css;document.head.append(st)}
 })();
@@ -1461,6 +1561,7 @@ $('#main').addEventListener('click',async e=>{
   const w=WR[+r.dataset.w],b=e.target.closest('button'),k=b&&b.dataset.k;
   if(k=='fav'){const id=ing(w);S.fav=S.fav.includes(id)?S.fav.filter(x=>x!=id):[...S.fav,id];persist();b.style.color=S.fav.includes(id)?'var(--ac)':'';return ui()}
   if(k=='pl')return plMenu({target:b},[ing(w)]);
+  if(k==='artist'){const name=String(w.artist||'').trim();if(name&&name!=='—'){WQ=name;WS='all';WA=[];WT=name;view='web';S.view='web';persist();render();wartist({k:'name',n:name})}else toast('Имя исполнителя неизвестно');return}
   if(k=='dl'){try{toast('Скачиваю…');const bl=await(await fetch(w.src)).blob(),nm=`${w.artist} - ${w.title}`.replace(/[\\/:*?"<>|]/g,'').slice(0,120)+'.mp3',f=new File([bl],nm,{type:bl.type||'audio/mpeg'});
       const l=document.createElement('a');l.href=URL.createObjectURL(f);l.download=nm;l.click();
       await imp([f]);const t=[...T.values()].find(x=>x.file&&x.file.name===nm);
@@ -1503,7 +1604,7 @@ $('#main').addEventListener('click',e=>{
   if(b){const k=b.dataset.a;
     if(k=='fav'){S.fav=S.fav.includes(id)?S.fav.filter(x=>x!=id):[...S.fav,id];persist();return view=='fav'||view=='home'?render():(b.style.color=S.fav.includes(id)?'var(--ac)':'',ui())}
     if(k=='q'){S.q.push(id);persist();return toast('Добавлено в очередь')}
-    if(k=='more'){const it=[['Воспроизвести',()=>play(id,[...LIST])],['Воспроизвести следующей',()=>{S.q.unshift(id);persist();toast('Сыграет следующей')}],['Добавить в плейлист…',()=>setTimeout(()=>plMenu({target:b},[id]),0)]];
+    if(k=='more'){const track=T.get(id);const artistName=String(track&&track.artist||'').trim();const it=[['Воспроизвести',()=>play(id,[...LIST])],['Воспроизвести следующей',()=>{S.q.unshift(id);persist();toast('Сыграет следующей')}],...(artistName&&artistName!=='—'?[['Все песни исполнителя: '+artistName,()=>{WQ=artistName;WS='all';WA=[];WT=artistName;view='web';S.view='web';persist();render();wartist({k:'name',n:artistName})}]]:[]),['Добавить в плейлист…',()=>setTimeout(()=>plMenu({target:b},[id]),0)]];
       if(view=='pls'&&openPl)it.push(['Убрать из плейлиста',()=>{const p=S.pl.find(x=>x.id==openPl);p.ids=p.ids.filter(x=>x!=id);persist();render()}]);
       if(view=='q')it.push(['Убрать из очереди',()=>{S.q.splice(i,1);persist();render()}]);
       it.push(['Сменить обложку…',()=>{coverFor=id;$('#fc').click()}],['Информация',()=>{const t=T.get(id);toast((t.src||t.yt)?`${t.title} · ${t.album} · онлайн`:`${t.file.name} · ${t.fmt} · ${mb(t.size)} · ${fmt(t.dur)}`)}],['Удалить из библиотеки',()=>setTimeout(()=>del(id),0)]);return menu(e,it)}}
@@ -3880,5 +3981,4 @@ window.djRender=draw;window.__dj={gag:startGag,st:()=>({by,cx,gag:gag&&gag.n,foc
 if(typeof view!=='undefined'&&view=='eq'&&typeof render=='function')render();
 })();
 </script>
-<script src="cloud-sync.js"></script>
 </body></html>
