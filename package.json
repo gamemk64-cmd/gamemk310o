@@ -1,0 +1,14 @@
+{
+  "name": "gamemk310o-music-player-karaoke-rebuild",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Music player with word-aware karaoke timing and a local lyrics library",
+  "scripts": {
+    "test": "node --test tests/karaoke-engine.test.cjs tests/karaoke-vocal.test.cjs tests/karaoke-db.test.cjs tests/karaoke-regression.test.cjs",
+    "test:dom": "node --test tests/karaoke-cinematic.test.cjs",
+    "check": "node --check karaoke-engine.js && node --check karaoke-vocal.js && node --check karaoke-database.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
+}

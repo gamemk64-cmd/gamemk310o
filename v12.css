@@ -1,0 +1,80 @@
+/* v12 — Люди, Настройки, голосовой HUD, анимации */
+
+/* ---------- иконки меню ---------- */
+#nav button[data-v=people]::before{content:"☻";font-size:17px}
+#nav button[data-v=set]::before{content:"⚙";font-size:17px}
+
+/* ---------- «нажатие» кнопки паузы голосом ---------- */
+#pp.vc-press{animation:v12press .7s cubic-bezier(.2,.9,.25,1)}
+@keyframes v12press{0%{transform:scale(1)}25%{transform:scale(.82);box-shadow:0 0 0 0 var(--ac)}60%{transform:scale(1.12);box-shadow:0 0 0 14px transparent}100%{transform:scale(1)}}
+
+/* ---------- настройки ---------- */
+#v12set .v12-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px;padding:5px;border-radius:18px;background:color-mix(in srgb,var(--pn) 70%,transparent);border:1px solid var(--ln);width:fit-content;max-width:100%}
+#v12set .v12-tabs button{padding:9px 16px;border-radius:13px;font-weight:700;color:var(--mu);transition:background .25s,color .25s,transform .2s}
+#v12set .v12-tabs button:hover{transform:translateY(-1px)}
+#v12set .v12-tabs button.on{background:var(--ac);color:var(--bg)}
+#v12set .v12-body{animation:v12in .35s cubic-bezier(.2,.9,.25,1)}
+#v12set .v12-sec h3:first-child{margin-top:0}
+.v12-list{display:flex;flex-direction:column;gap:8px;max-width:760px}
+.v12-item{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 15px;border-radius:16px;background:color-mix(in srgb,var(--pn) 68%,transparent);border:1px solid var(--ln);backdrop-filter:blur(14px)}
+.v12-item>div:first-child{min-width:0;flex:1}
+.v12-item b{display:block}
+.v12-item small{display:block;color:var(--mu);margin-top:2px;line-height:1.35}
+.v12-item input[type=text],.v12-item select{max-width:46vw;min-width:0}
+.v12-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.v12-install{border-color:color-mix(in srgb,var(--ac) 45%,var(--ln));background:color-mix(in srgb,var(--ac) 10%,transparent)}
+.v12-sw{width:50px;height:30px;border-radius:30px;padding:0;position:relative;flex:none;background:var(--pn2);border:1px solid var(--ln);transition:background .25s}
+.v12-sw i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--mu);transition:transform .28s cubic-bezier(.2,.9,.25,1),background .25s}
+.v12-sw.on{background:var(--ac)}
+.v12-sw.on i{transform:translateX(20px);background:var(--bg)}
+@keyframes v12in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- люди ---------- */
+.v12-ava{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font:800 22px var(--disp,inherit);background:linear-gradient(140deg,var(--ac),color-mix(in srgb,var(--ac) 35%,#000));color:var(--bg);flex:none;box-shadow:0 10px 26px -12px var(--ac)}
+.v12-ucard{text-align:center;animation:v12in .4s both;animation-delay:calc(var(--i,0)*45ms);transition:transform .25s,border-color .25s}
+.v12-ucard:hover{transform:translateY(-4px)}
+.v12-ucard .v12-ava{margin:4px auto 10px;width:64px;height:64px;font-size:26px}
+.v12-me{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:18px;margin:0 0 16px;background:color-mix(in srgb,var(--pn) 68%,transparent);border:1px solid var(--ln)}
+.v12-me>div{flex:1;min-width:0}
+.v12-user{display:flex;align-items:center;gap:16px;margin:6px 0 10px}
+.v12-user .v12-ava{width:68px;height:68px;font-size:28px}
+.v12-prow{animation:v12in .4s both;animation-delay:calc(var(--i,0)*35ms)}
+.v12-lk{font-size:20px;transition:transform .2s,color .2s}
+.v12-lk.on{color:#ff4d6d;animation:v12heart .45s cubic-bezier(.2,.9,.25,1)}
+@keyframes v12heart{0%{transform:scale(.6)}55%{transform:scale(1.5)}100%{transform:scale(1)}}
+.v12-hero{text-align:center;padding:46px 20px;border:1px dashed var(--ln);border-radius:24px;max-width:560px;margin:20px auto}
+.v12-hero-i{font-size:54px;color:var(--ac)}
+.v12-hero p{color:var(--mu)}
+
+/* ---------- установка ---------- */
+.v12-modal{position:fixed;inset:0;z-index:100001;display:grid;place-items:center;background:#0009;backdrop-filter:blur(8px);animation:v12fade .25s}
+.v12-mbox{width:min(440px,92vw);padding:22px;border-radius:24px;background:var(--bg);color:var(--tx);border:1px solid var(--ln);box-shadow:0 40px 90px -30px #000;animation:v12in .35s cubic-bezier(.2,.9,.25,1)}
+.v12-mbox h3{margin:0 0 10px;font-size:20px}
+.v12-mbox ol{margin:0 0 8px;padding-left:20px;line-height:1.55;color:var(--mu)}
+@keyframes v12fade{from{opacity:0}to{opacity:1}}
+
+/* ---------- анимации смены песни ---------- */
+body[data-sw] #pc{animation:v12cv .65s cubic-bezier(.2,.9,.25,1)}
+body[data-sw=next] #now .tt{animation:v12txtR .5s cubic-bezier(.2,.9,.25,1)}
+body[data-sw=prev] #now .tt{animation:v12txtL .5s cubic-bezier(.2,.9,.25,1)}
+body[data-sw] #amb{animation:v12amb 1s ease-out}
+@keyframes v12cv{0%{transform:scale(.55) rotate(-14deg);opacity:0;filter:blur(6px)}55%{transform:scale(1.1) rotate(3deg);opacity:1;filter:none}100%{transform:none}}
+@keyframes v12txtR{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes v12txtL{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+@keyframes v12amb{0%{filter:brightness(1)}30%{filter:brightness(1.9) saturate(1.4)}100%{filter:none}}
+.big{animation:v12big .8s cubic-bezier(.2,.9,.25,1)}
+.hi h2,.hi .chip{animation:v12txtR .6s cubic-bezier(.2,.9,.25,1) both}
+.hi .chip{animation-delay:.08s}
+@keyframes v12big{0%{opacity:0;transform:scale(.72) rotate(-6deg);filter:blur(10px)}60%{transform:scale(1.04) rotate(1deg);filter:none}100%{opacity:1}}
+.row.on{animation:v12row .5s cubic-bezier(.2,.9,.25,1)}
+@keyframes v12row{from{transform:translateX(-10px);opacity:.6}to{transform:none;opacity:1}}
+.v12-ring{position:fixed;z-index:50;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;pointer-events:none;border:2px solid var(--ac);animation:v12ring 1s ease-out forwards}
+@keyframes v12ring{from{transform:scale(1);opacity:.9}to{transform:scale(14);opacity:0}}
+body.v12-noanim #pc,body.v12-noanim #now .tt,body.v12-noanim #amb,body.v12-noanim .big,body.v12-noanim .hi h2,body.v12-noanim .hi .chip,body.v12-noanim .row.on{animation:none!important}
+body.v12-noanim .v12-ring{display:none}
+@media(prefers-reduced-motion:reduce){body[data-sw] #pc,body[data-sw] #now .tt,body[data-sw] #amb,.big,.hi h2,.hi .chip,.row.on,.v12-ring{animation:none!important}}
+
+/* ---------- телефон ---------- */
+html.m .v12-item,html.android .v12-item{flex-wrap:wrap}
+html.m .v12-item input[type=text],html.m .v12-item select,html.android .v12-item input[type=text],html.android .v12-item select{max-width:100%;width:100%}
+@media(max-width:700px){.v12-item{flex-wrap:wrap}.v12-item input[type=text],.v12-item select{max-width:100%;width:100%}}
